@@ -1,0 +1,19 @@
+{
+  "service": {
+    "check": {
+      "id": "nginx",
+      "name": "HTTP API on port 32890",
+      "http": "http://localhost:32890",
+      "tls_skip_verify": true,
+      "method": "HEAD",
+      "interval": "10s",
+      "timeout": "3s"
+    },
+    "enable_tag_override": false,
+    "id": "nginx",
+    "name": "nginx",
+    "address": "",
+    "port": 32890,
+    "tags": [ "wa" ]
+  }
+}
