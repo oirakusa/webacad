@@ -1,0 +1,13 @@
+---
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Installing nginx
+      ansible.builtin.apt:
+        name: nginx=1.18.0-0ubuntu1.4
+        state: fixed
+        update_cache: yes
+        allow_downgrade: yes
+        autoremove: yes
+        

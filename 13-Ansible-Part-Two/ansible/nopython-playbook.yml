@@ -1,0 +1,12 @@
+---
+- hosts: no_python
+  become: true
+  gather_facts: true
+  
+  tasks:
+  - name: RAW Python install
+    ansible.builtin.raw: apt update && apt install -y python3-minimal
+    args:
+      executable: /bin/bash
+    changed_when: false
+

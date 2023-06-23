@@ -1,0 +1,67 @@
+############################
+# LEMP Playbook WA         #
+############################
+---
+- hosts: master
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Installing nginx
+      ansible.builtin.apt:
+        name: nginx=1.18.0-0ubuntu1.4
+        state: fixed
+        update_cache: yes
+        allow_downgrade: yes
+        autoremove: yes
+    
+    - name: Delete /var/www/html
+      ansible.builtin.file:
+        path: "/var/www/html"
+        state: "absent"
+
+    - name: Copy default index.html
+      ansible.builtin.copy:
+        src: "./files/html"
+        dest: "/var/www/html"
+        owner: "vagrant"
+        group: "vagrant"
+        mode: "0644"
+
+- hosts: slave
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Installing MySQL packages
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+        allow_downgrade: yes
+        autoremove: yes
+      with_items:
+        - "python3-pymysql"
+        - "python3-mysqldb"
+        - "mysql-common"
+        - "mysql-server"
+
+    - name: Start MySQL server
+      ansible.builtin.service:
+        name: "mysql"
+        state: "started"
+        enabled: yes
+
+    - name: Set root user
+      community.mysql.mysql_user:
+        name: "root"
+        password: "password"
+        login_user: "root"
+        login_password: "password"
+        check_implicit_admin: yes
+        login_unix_socket: "/var/run/mysqld/mysqld.sock"
+
+    - name: Remove anonymous users
+      community.mysql.mysql_user:
+        name: ""
+        state: "absent"
+        login_user: "root"
+        login_password: "password"

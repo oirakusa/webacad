@@ -1,0 +1,35 @@
+- name: Install epel-release yum
+  ansible.builtin.yum:
+    name: epel-release
+    update_cache: yes
+    state: latest
+
+- name: Installing nginx
+  ansible.builtin.yum:
+    name: nginx
+    state: latest
+    update_cache: yes
+    allow_downgrade: yes
+    autoremove: yes
+
+- name: Delete /var/www/html
+  ansible.builtin.file:
+    path: "/usr/share/nginx/html"
+    state: "absent"
+
+- name: Copy default index.html
+  ansible.builtin.copy:
+    src: "./files/html"
+    dest: "/usr/share/nginx/html"
+    owner: "vagrant"
+    group: "vagrant"
+    mode: "0644"
+
+- name: Replace default config
+  ansible.builtin.template:
+    src: files/templates/default.centos.conf.j2
+    dest: /etc/nginx/conf.d/default.conf
+    owner: "vagrant"
+    group: "vagrant"
+    mode: "0644"
+    

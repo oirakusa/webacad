@@ -1,0 +1,94 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+ubuntu_version = "ubuntu/focal64"
+cluster_cidr = "192.168.23"
+master_node_count = 1
+slave_node_count = 1
+master_node_prefix = "master"
+slave_node_prefix = "slave"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "mngm" do |mngm|
+    mngm.vm.box = "#{ubuntu_version}"
+    mngm.vm.box_check_update = true
+    mngm.vm.hostname = "mngm"
+    mngm.vm.provider "virtualbox" do |vb|
+      vb.name = "mngm"
+      vb.cpus = 2
+      vb.memory = "2048"
+      vb.gui = false
+    end
+    mngm.vm.network "private_network", ip: "#{cluster_cidr}.10",
+      nic_type: "82543GC"
+
+    mngm.vm.provision "shell", path: "./scripts/mngm.sh"
+
+    mngm.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+      service ssh restart
+    SHELL
+
+    mngm.vm.network "forwarded_port", guest: 80, host: 8080
+
+    mngm.vm.synced_folder "./userdata", "/home/vagrant/userdata"
+    mngm.vm.synced_folder "./ansible", "/home/vagrant/ansible"
+
+    mngm.vm.provision "ansible_local" do |ansible|
+      ansible.install  = true
+      ansible.playbook = "./ansible/playbook.yml"
+    end
+
+  end
+
+  # Master
+  (1..master_node_count).each do |i|
+    config.vm.define "#{master_node_prefix}-#{i}" do |node|
+      node.vm.box = "#{ubuntu_version}"
+      node.vm.box_check_update = true
+      node.vm.hostname = "#{master_node_prefix}-#{i}"
+      node.vm.provider "virtualbox" do |vb|
+        vb.name = "#{master_node_prefix}-#{i}"
+        vb.cpus = 1
+        vb.memory = "1024"
+        vb.gui = false
+      end
+      node.vm.network "private_network", ip: "#{cluster_cidr}.#{i+10}",
+        nic_type: "82543GC"
+
+      node.vm.provision "shell", inline: <<-SHELL
+        sudo apt update
+        sudo apt upgrade -y
+        sudo apt install -y sshpass git
+        sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+        service ssh restart
+      SHELL
+    end
+  end
+
+    # Slave
+    (1..slave_node_count).each do |i|
+      config.vm.define "#{slave_node_prefix}-#{i}" do |node|
+        node.vm.box = "#{ubuntu_version}"
+        node.vm.box_check_update = true
+        node.vm.hostname = "#{slave_node_prefix}-#{i}"
+        node.vm.provider "virtualbox" do |vb|
+          vb.name = "#{slave_node_prefix}-#{i}"
+          vb.cpus = 1
+          vb.memory = "1024"
+          vb.gui = false
+        end
+        node.vm.network "private_network", ip: "#{cluster_cidr}.#{master_node_count+i+10}",
+          nic_type: "82543GC"
+  
+        node.vm.provision "shell", inline: <<-SHELL
+          sudo apt update
+          sudo apt upgrade -y
+          sudo apt install -y sshpass git
+          sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+          service ssh restart
+        SHELL
+      end
+    end
+end
