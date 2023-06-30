@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ip-deployment
+  namespace: demo
+  labels:
+    app: ip
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ip
+  template:
+    metadata:
+      labels:
+        app: ip
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: ip
+          image: hub.opsua.uno/1005/ip:0.1.0
+          ports:
+            - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ip
+  namespace: demo
+  labels:
+    app: ip
+spec:
+  selector:
+    app: ip
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-ip
+  namespace: demo
+spec:
+  rules:
+    - host: "ip.opsua.uno"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: ip
+                port:
+                  number: 8080

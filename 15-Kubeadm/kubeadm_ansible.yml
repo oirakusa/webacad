@@ -1,0 +1,169 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: disable swap
+      shell: |
+        sudo swapoff -a
+        sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+
+    - name: Add modules conf for k8s
+      blockinfile:
+        path: "/etc/modules-load.d/k8s.conf"
+        block: |
+          overlay
+          br_netfilter
+        create: yes
+
+    - name: Add modules
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - overlay
+        - br_netfilter
+
+    - name: Set sysctl file and reload
+      ansible.posix.sysctl:
+        name: "{{ item }}"
+        value: '1'
+        state: present
+        reload: yes
+      with_items:
+        - net.ipv4.ip_forward
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+
+    - name: Download containerd package
+      get_url:
+        url: https://github.com/containerd/containerd/releases/download/v1.6.4/containerd-1.6.4-linux-amd64.tar.gz
+        dest: /home/vagrant/containerd-1.6.4-linux-amd64.tar.gz
+        mode: '0777'
+
+    - name: Extract containerd
+      ansible.builtin.unarchive:
+        src: /home/vagrant/containerd-1.6.4-linux-amd64.tar.gz
+        dest: /usr/local
+        remote_src: yes
+
+    - name: Create containerd config.toml
+      lineinfile:
+        line: ""
+        path: "/etc/containerd/config.toml"
+        create: yes
+
+    - name: Populate containerd config
+      shell: containerd config default | tee /etc/containerd/config.toml
+
+    - name: Set SystemdCgroup to true in containerd config
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: "SystemdCgroup = false"
+        replace: "SystemdCgroup = true"
+
+    - name: Download runc package
+      get_url:
+        url: https://github.com/opencontainers/runc/releases/download/v1.1.2/runc.amd64
+        dest: /home/vagrant/runc.amd64
+        mode: '0777'
+
+    - name: Install runc
+      shell: install -m 755 /home/vagrant/runc.amd64 /usr/local/sbin/runc
+
+    - name: Download cni plugin
+      get_url:
+        url: https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz
+        dest: /home/vagrant/cni-plugins-linux-amd64-v1.1.1.tgz
+        mode: '0777'
+
+    - name: Create /opt/cni/bin dir
+      file:
+        path: /opt/cni/bin
+        state: directory
+
+    - name: Extract cni plugin
+      ansible.builtin.unarchive:
+        src: /home/vagrant/cni-plugins-linux-amd64-v1.1.1.tgz
+        dest: /opt/cni/bin
+        remote_src: yes
+
+    - name: Download containerd service
+      get_url:
+        url: https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+        dest: /etc/systemd/system/containerd.service
+        mode: '0777'
+
+    - name: Issue daemon-reload to pick up config changes, restart containerd service
+      ansible.builtin.systemd:
+        state: restarted
+        daemon_reload: yes
+        name: containerd
+
+    - name: Download flannel
+      get_url:
+        url: https://github.com/flannel-io/flannel/releases/download/v0.18.0/flannel-v0.18.0-linux-amd64.tar.gz
+        dest: /home/vagrant/flannel-v0.18.0-linux-amd64.tar.gz
+        mode: '0777'
+
+    - name: Create /opt/bin dir
+      file:
+        path: /opt/bin
+        state: directory
+
+    - name: Extract flannel
+      ansible.builtin.unarchive:
+        src: /home/vagrant/flannel-v0.18.0-linux-amd64.tar.gz
+        dest: /opt/bin
+        remote_src: yes
+
+    - name: Install packages that allow apt to be used over HTTPS
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+
+    - name: Add an apt signing key for Kubernetes
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Adding apt repository for Kubernetes
+      apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: kubernetes.list
+
+    - name: Install Kubernetes binaries
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+          - kubelet
+          - kubeadm
+          - kubectl
+
+    - name: Initialize the cluster
+      shell: kubeadm init --pod-network-cidr=10.244.0.0/16
+
+    - name: Create /home/vagrant/.kube dir
+      file:
+        path: /home/vagrant/.kube
+        state: directory
+
+    - name: Copies admin.conf to user's kube config
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/vagrant/.kube/config
+        remote_src: yes
+        owner: vagrant
+
+    - name:  Install flannel for k8s
+      become: false
+      command: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml

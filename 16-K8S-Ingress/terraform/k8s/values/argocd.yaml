@@ -1,0 +1,33 @@
+redis:
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+server:
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+  extraArgs:
+    - --insecure
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    hosts:
+     - argocd-w.opsua.uno
+
+applicationSet:
+  enabled: false
+
+configs:
+  cm:
+    url: http://argocd.opsua.uno
+    resource.customizations: |
+      networking.k8s.io/Ingress:
+          health.lua: |
+            hs = {}
+            hs.status = "Healthy"
+            return hs
+  secret:
+    argocdServerAdminPassword: "$2a$10$QnjaeGBeitbR6jtDFeK7KemojXkdWk/5GSkJrhDqnGlb5MP/Yxseq"  # admin - hash
+    argocdServerAdminPasswordMtime: "2006-01-02T15:04:05Z"
