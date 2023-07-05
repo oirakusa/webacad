@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ip-web
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: http://10.117.0.101/1005/helm-charts.git
+    targetRevision: ip-web-0.3.0
+    path: ip-web
+    helm:
+      values: |
+        replicaCount: 2
+        image:
+          group: "1005"
+          app: "ip"
+          tag: "0.1.0"
+        env:
+          JUL: "05"
+        envSecrets:
+          DB_PASSWORD: "ip-web"
+        ingress:
+          enabled: true
+          hosts:
+            - host: ip.opsua.uno
+              paths:
+                - path: /
+                  pathType: ImplementationSpecific
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo

@@ -1,0 +1,25 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  namespace: demo
+  name: rest-api
+spec:
+  refreshInterval: "15s"
+  secretStoreRef:
+    name: vault-backend
+    kind: SecretStore
+  target:
+    name: rest-api-db
+  data:
+    - secretKey: DB_HOST
+      remoteRef:
+        key: secret/dev/rest-api
+        property: DB_HOST
+    - secretKey: DB_USER
+      remoteRef:
+        key: secret/dev/rest-api
+        property: DB_USER
+    - secretKey: DB_PASSWORD
+      remoteRef:
+        key: secret/dev/rest-api
+        property: DB_PASSWORD
