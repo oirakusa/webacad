@@ -1,0 +1,43 @@
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: logging
+  labels:
+    app.kubernetes.io/name: eck-kibana
+spec:
+  version: 8.8.0
+  count: 1
+  elasticsearchRef:
+    name: "elasticsearch"
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            limits:
+              memory: 4Gi
+            requests:
+              memory: 256Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kibana-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: kibana-w.opsua.uno
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: kibana-kb-http
+                port:
+                  number: 5601
