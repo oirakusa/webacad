@@ -1,0 +1,75 @@
+ubuntu@webacad:~/docker$ sudo docker build -f Dockerfile -t wa-redis .
+[+] Building 22.9s (5/5) FINISHED                                                             docker:default
+ => [internal] load .dockerignore                                                                       0.1s
+ => => transferring context: 2B                                                                         0.0s
+ => [internal] load build definition from Dockerfile                                                    0.1s
+ => => transferring dockerfile: 61B                                                                     0.0s
+ => [internal] load metadata for docker.io/library/redis:latest                                         2.1s
+ => [1/1] FROM docker.io/library/redis@sha256:08a82d4bf8a8b4dd94e8f5408cdbad9dd184c1cf311d34176cd3e99  20.5s
+ => => resolve docker.io/library/redis@sha256:08a82d4bf8a8b4dd94e8f5408cdbad9dd184c1cf311d34176cd3e997  0.0s
+ => => sha256:7e89539dd8bd73be0667d8bacf39e91bc14f0e106d0f50f778da05e903726e29 7.79kB / 7.79kB          0.0s
+ => => sha256:faef57eae888cbe4a5613eca6741b5e48d768b83f6088858aee9a5a2834f8151 29.12MB / 29.12MB        5.0s
+ => => sha256:d479b54c3bb2879fe377f6b0edc0a19237e58f109cf61b69b8559f5e4addb0a4 1.44MB / 1.44MB          0.6s
+ => => sha256:08a82d4bf8a8b4dd94e8f5408cdbad9dd184c1cf311d34176cd3e9972c43f872 1.86kB / 1.86kB          0.0s
+ => => sha256:9c8c3268cbe8925e2e4485ca0e48a42ff82393e2ec4c4026534fe3f4dd7d6786 1.57kB / 1.57kB          0.0s
+ => => sha256:bb595d48e52d9f8dc4435a8f6723c518232bbd423a97909627c113a293eea9a3 1.12kB / 1.12kB          0.2s
+ => => sha256:2044989c541ac86643e33c6c4be3d48b9a0125c687ced37377ec32b9cc5e4a33 17.56MB / 17.56MB        3.3s
+ => => sha256:01e4ba5495fa214ccabe1d6202838531b9b984a7cf97ed010a21579f8d253379 133B / 133B              0.8s
+ => => sha256:ed7a9fd4b0ea42ab088811473b59dd71d23ebdc44631185ee9b9699011422006 575B / 575B              1.1s
+ => => extracting sha256:faef57eae888cbe4a5613eca6741b5e48d768b83f6088858aee9a5a2834f8151               9.1s
+ => => extracting sha256:bb595d48e52d9f8dc4435a8f6723c518232bbd423a97909627c113a293eea9a3               0.0s
+ => => extracting sha256:d479b54c3bb2879fe377f6b0edc0a19237e58f109cf61b69b8559f5e4addb0a4               0.1s
+ => => extracting sha256:2044989c541ac86643e33c6c4be3d48b9a0125c687ced37377ec32b9cc5e4a33               5.1s
+ => => extracting sha256:01e4ba5495fa214ccabe1d6202838531b9b984a7cf97ed010a21579f8d253379               0.0s
+ => => extracting sha256:ed7a9fd4b0ea42ab088811473b59dd71d23ebdc44631185ee9b9699011422006               0.0s
+ => exporting to image                                                                                  0.0s
+ => => exporting layers                                                                                 0.0s
+ => => writing image sha256:4c75850fac6c564281a0909e1c0d87bb787bcd34a744a8af74690d2b8269c4c0            0.0s
+ => => naming to docker.io/library/wa-redis                                                                                                                                                         0.0s 
+
+root@webacad:~# docker run -d --memory="256m" --cpus="0.5" wa-redis
+6e57a17225bf4a3a84506cef0ba3d3d208548e4fc88687b452fa7960241b0ae3
+
+root@webacad:~# sudo cgget -r memory.limit_in_bytes docker/6e57a17225bf4a3a84506cef0ba3d3d208548e4fc88687b452fa7960241b0ae3
+docker/6e57a17225bf4a3a84506cef0ba3d3d208548e4fc88687b452fa7960241b0ae3:
+memory.limit_in_bytes: 268435456
+
+root@webacad:~# sudo cgget -r cpu.cfs_quota_us docker/6e57a17225bf4a3a84506cef0ba3d3d208548e4fc88687b452fa7960241b0ae3
+docker/6e57a17225bf4a3a84506cef0ba3d3d208548e4fc88687b452fa7960241b0ae3:
+cpu.cfs_quota_us: 50000
+
+root@webacad:~# docker run -d -v /redis-data:/data wa-redis
+
+root@webacad:~# docker exec -it kind_zhukovsky sh
+# redis-cli
+127.0.0.1:6379> SET key "Hello WA!"
+OK
+127.0.0.1:6379> SET key1 "Newer gonna give you up!"
+OK
+127.0.0.1:6379> SET key2 "Newer gonna get you down!"
+OK
+127.0.0.1:6379> GET key*
+(nil)
+127.0.0.1:6379> GET key
+"Hello WA!"
+127.0.0.1:6379> GET key1
+"Newer gonna give you up!"
+127.0.0.1:6379> GET key2
+"Newer gonna get you down!"
+127.0.0.1:6379>
+127.0.0.1:6379> exit
+# exit
+root@webacad:~# docker stop kind_zhukovsky
+kind_zhukovsky
+root@webacad:~# docker run -d -v /redis-data:/data wa-redis
+b7195ec2fe21d98cccb55fb5386169a8863bb427989e72260c8fb6b6ec623d7a
+root@webacad:~# docker exec -it b7195ec2fe21 sh
+# redis-cli
+127.0.0.1:6379> GET dkey
+(nil)
+127.0.0.1:6379> GET key
+"Hello WA!"
+127.0.0.1:6379> GET key1
+"Newer gonna give you up!"
+127.0.0.1:6379> GET key2
+"Newer gonna get you down!"
