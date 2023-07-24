@@ -1,0 +1,18 @@
+from flask import Flask
+import redis
+import os
+
+app = Flask(__name__)
+redis_host = os.environ.get('REDIS_HOST')
+redis_port = os.environ.get('REDIS_PORT')
+redis_db = 0
+redis_client = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db)
+
+@app.route('/')
+def home():
+    redis_client.incr('connection_count')
+    return f'Кількість підключень: {redis_client.get("connection_count")}'
+
+
+if __name__ == '__main__':
+    app.run(debug=True, host="0.0.0.0", port=8080)
