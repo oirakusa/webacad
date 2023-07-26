@@ -1,0 +1,64 @@
+version: '3'
+services:
+  reverse-proxy:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--entrypoints.http.address=:80"
+      - "--entrypoints.traefik.address=:8080"
+      - "--log.filePath=/var/log/traefik.log"
+      - "--accessLog.filePath=/var/log/access.log"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - app_network
+
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.python-app.rule=Host(`localhost`)"
+      - "traefik.http.routers.python-app.service=python-app-$COMPOSE_PROJECT_NAME@docker"
+      - "traefik.http.routers.python-app.entrypoints=http"
+    deploy:
+      mode: replicated
+      replicas: 4
+      update_config:
+        parallelism: 4
+        delay: 10s
+    networks:
+      - app_network
+    ports:
+      - "5000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+        redis:
+          condition: service_healthy
+    restart: always
+  redis:
+    image: redis
+    healthcheck:
+      test: ["CMD", "redis-cli","ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - redis_data:/data
+    restart: always
+    networks:
+      - app_network
+
+volumes:
+  redis_data:
+
+networks:
+  app_network:
