@@ -14,9 +14,14 @@ resource "gitlab_group" "example_group" {
 
 # Create a project in the example group
 resource "gitlab_project" "main_project" {
-  name         = "wa-${var.gitlab_group_number}-proj"
-  description  = "An example project"
-  namespace_id = gitlab_group.example_group.id
+  name                   = "wa-${var.gitlab_group_number}-proj"
+  description            = "An example project"
+  namespace_id           = gitlab_group.example_group.id
+  approvals_before_merge = 2
+  push_rules {
+    prevent_secrets         = true
+    reject_unsigned_commits = true
+  }
 }
 
 # Create a gitlab project access token
