@@ -1,0 +1,65 @@
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\04-Terraform-Terragrunt\task-1> tfsec
+  timings
+  ──────────────────────────────────────────
+  disk i/o             1.5438ms
+  parsing              1.0049ms
+  adaptation           0s
+  checks               5.4587ms
+  total                8.0074ms
+
+  counts
+  ──────────────────────────────────────────
+  modules downloaded   0
+  modules processed    1
+  blocks processed     15
+  files read           5
+
+  results
+  ──────────────────────────────────────────
+  passed               2
+  ignored              0
+  critical             0
+  high                 0
+  medium               0
+  low                  0
+
+
+No problems detected!
+
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\04-Terraform-Terragrunt\task-1> tflint /format json
+{"issues":[],"errors":[]}
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\04-Terraform-Terragrunt\task-1> checkov -d ./
+Не найдено сопоставление для расширения имени файла .py.
+[ terraform framework ]: 100%|████████████████████|[4/4], Current File Scanned=versions.tf
+[ secrets framework ]: 100%|████████████████████|[5/5], Current File Scanned=./versions.tf 
+
+       _               _
+   ___| |__   ___  ___| | _______   __
+  / __| '_ \ / _ \/ __| |/ / _ \ \ / /
+ | (__| | | |  __/ (__|   < (_) \ V /
+  \___|_| |_|\___|\___|_|\_\___/ \_/
+
+By bridgecrew.io | version: 2.3.347
+
+terraform scan results:
+
+Passed checks: 4, Failed checks: 0, Skipped checks: 0
+
+Check: CKV_GLB_3: "Ensure GitLab prevent secrets is enabled"
+        PASSED for resource: gitlab_project.main_project
+        File: /main.tf:16-25
+        Guide: https://docs.paloaltonetworks.com/content/techdocs/en_US/prisma/prisma-cloud/prisma-cloud-code-security-policy-reference/build-integrity-policies/gitlab-policies/ensure-gitlab-prevent-secrets-is-enabled.html
+Check: CKV_GLB_4: "Ensure GitLab commits are signed"
+        PASSED for resource: gitlab_project.main_project
+        File: /main.tf:16-25
+        Guide: https://docs.paloaltonetworks.com/content/techdocs/en_US/prisma/prisma-cloud/prisma-cloud-code-security-policy-reference/build-integrity-policies/gitlab-policies/ensure-gitlab-commits-are-signed.html
+Check: CKV_GLB_1: "Ensure at least two approving reviews are required to merge a GitLab MR"
+        PASSED for resource: gitlab_project.main_project
+        File: /main.tf:16-25
+        Guide: https://docs.paloaltonetworks.com/content/techdocs/en_US/prisma/prisma-cloud/prisma-cloud-code-security-policy-reference/build-integrity-policies/gitlab-policies/merge-requests-do-not-require-two-or-more-approvals-to-merge.html
+Check: CKV_GLB_2: "Ensure GitLab branch protection rules does not allow force pushes"
+        PASSED for resource: gitlab_branch_protection.main
+        File: /main.tf:74-80
+        Guide: https://docs.bridgecrew.io/docs/ensure-gitlab-branch-protection-rules-does-not-allow-force-pushes
+
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\04-Terraform-Terragrunt\task-1> 
