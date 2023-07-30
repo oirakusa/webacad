@@ -1,0 +1,173 @@
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\03-SCM-Terraform\task-1> terraform init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing previous version of gitlabhq/gitlab from the dependency lock file
+- Using previously-installed gitlabhq/gitlab v15.11.0
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\03-SCM-Terraform\task-1> terraform plan -out=C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\03-SCM-Terraform\task-1\wa1.tfplan
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # gitlab_group.group will be created
+  + resource "gitlab_group" "group" {
+      + auto_devops_enabled                = (known after apply)
+      + avatar_hash                        = (known after apply)
+      + avatar_url                         = (known after apply)
+      + default_branch_protection          = (known after apply)
+      + description                        = "An example group"
+      + emails_disabled                    = (known after apply)
+      + extra_shared_runners_minutes_limit = (known after apply)
+      + full_name                          = (known after apply)
+      + full_path                          = (known after apply)
+      + id                                 = (known after apply)
+      + lfs_enabled                        = (known after apply)
+      + mentions_disabled                  = (known after apply)
+      + name                               = "03-task-1gr1"
+      + parent_id                          = (known after apply)
+      + path                               = "03-task-1gr1"
+      + prevent_forking_outside_group      = (known after apply)
+      + project_creation_level             = (known after apply)
+      + request_access_enabled             = (known after apply)
+      + require_two_factor_authentication  = (known after apply)
+      + runners_token                      = (sensitive value)
+      + share_with_group_lock              = (known after apply)
+      + shared_runners_minutes_limit       = (known after apply)
+      + subgroup_creation_level            = (known after apply)
+      + two_factor_grace_period            = (known after apply)
+      + visibility_level                   = (known after apply)
+      + web_url                            = (known after apply)
+    }
+
+  # gitlab_project.project will be created
+  + resource "gitlab_project" "project" {
+      + allow_merge_on_skipped_pipeline                  = (known after apply)
+      + analytics_access_level                           = (known after apply)
+      + auto_cancel_pending_pipelines                    = (known after apply)
+      + auto_devops_deploy_strategy                      = (known after apply)
+      + auto_devops_enabled                              = (known after apply)
+      + autoclose_referenced_issues                      = (known after apply)
+      + avatar_hash                                      = (known after apply)
+      + avatar_url                                       = (known after apply)
+      + build_git_strategy                               = (known after apply)
+      + build_timeout                                    = (known after apply)
+      + builds_access_level                              = (known after apply)
+      + ci_default_git_depth                             = (known after apply)
+      + ci_forward_deployment_enabled                    = (known after apply)
+      + ci_separated_caches                              = (known after apply)
+      + container_registry_access_level                  = (known after apply)
+      + container_registry_enabled                       = (known after apply)
+      + default_branch                                   = (known after apply)
+      + description                                      = "An example project"
+      + environments_access_level                        = (known after apply)
+      + feature_flags_access_level                       = (known after apply)
+      + forking_access_level                             = (known after apply)
+      + http_url_to_repo                                 = (known after apply)
+      + id                                               = (known after apply)
+      + infrastructure_access_level                      = (known after apply)
+      + issues_access_level                              = (known after apply)
+      + issues_enabled                                   = (known after apply)
+      + keep_latest_artifact                             = (known after apply)
+      + lfs_enabled                                      = (known after apply)
+      + merge_method                                     = (known after apply)
+      + merge_pipelines_enabled                          = (known after apply)
+      + merge_requests_access_level                      = (known after apply)
+      + merge_requests_enabled                           = (known after apply)
+      + merge_trains_enabled                             = (known after apply)
+      + mirror_overwrites_diverged_branches              = (known after apply)
+      + mirror_trigger_builds                            = (known after apply)
+      + monitor_access_level                             = (known after apply)
+      + name                                             = "03-task-1proj1"
+      + namespace_id                                     = (known after apply)
+      + only_allow_merge_if_all_discussions_are_resolved = (known after apply)
+      + only_allow_merge_if_pipeline_succeeds            = (known after apply)
+      + only_mirror_protected_branches                   = (known after apply)
+      + operations_access_level                          = (known after apply)
+      + packages_enabled                                 = (known after apply)
+      + pages_access_level                               = (known after apply)
+      + path_with_namespace                              = (known after apply)
+      + pipelines_enabled                                = (known after apply)
+      + printing_merge_request_link_enabled              = (known after apply)
+      + public_builds                                    = (known after apply)
+      + releases_access_level                            = (known after apply)
+      + remove_source_branch_after_merge                 = (known after apply)
+      + repository_access_level                          = (known after apply)
+      + repository_storage                               = (known after apply)
+      + request_access_enabled                           = (known after apply)
+      + requirements_access_level                        = (known after apply)
+      + runners_token                                    = (sensitive value)
+      + security_and_compliance_access_level             = (known after apply)
+      + shared_runners_enabled                           = (known after apply)
+      + snippets_access_level                            = (known after apply)
+      + snippets_enabled                                 = (known after apply)
+      + squash_option                                    = (known after apply)
+      + ssh_url_to_repo                                  = (known after apply)
+      + tags                                             = (known after apply)
+      + topics                                           = (known after apply)
+      + visibility_level                                 = (known after apply)
+      + web_url                                          = (known after apply)
+      + wiki_access_level                                = (known after apply)
+      + wiki_enabled                                     = (known after apply)
+    }
+
+  # gitlab_project_access_token.example will be created
+  + resource "gitlab_project_access_token" "example" {
+      + access_level = "developer"
+      + active       = (known after apply)
+      + created_at   = (known after apply)
+      + expires_at   = "2023-09-14"
+      + id           = (known after apply)
+      + name         = "Webacad project access token 1"
+      + project      = (known after apply)
+      + revoked      = (known after apply)
+      + scopes       = [
+          + "api",
+        ]
+      + token        = (sensitive value)
+      + user_id      = (known after apply)
+    }
+
+  # gitlab_project_variable.example will be created
+  + resource "gitlab_project_variable" "example" {
+      + environment_scope = "*"
+      + id                = (known after apply)
+      + key               = "pat"
+      + masked            = false
+      + project           = (known after apply)
+      + protected         = false
+      + value             = (sensitive value)
+      + variable_type     = "env_var"
+    }
+
+Plan: 4 to add, 0 to change, 0 to destroy.
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── 
+
+Saved the plan to: C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\03-SCM-Terraform\task-1\wa1.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "C:\\Users\\Irakusa\\.vscode\\projects\\DevOps-10-05-23\\03-SCM-Terraform\\task-1\\wa1.tfplan"
+PS C:\Users\Irakusa\.vscode\projects\DevOps-10-05-23\03-SCM-Terraform\task-1> terraform apply "C:\\Users\\Irakusa\\.vscode\\projects\\DevOps-10-05-23\\03-SCM-Terraform\\task-1\\wa1.tfplan"
+gitlab_group.group: Creating...
+gitlab_group.group: Creation complete after 7s [id=9]
+gitlab_project.project: Creating...
+gitlab_project.project: Creation complete after 1s [id=4]
+gitlab_project_access_token.example: Creating...
+gitlab_project_access_token.example: Creation complete after 1s [id=4:3]
+gitlab_project_variable.example: Creating...
+gitlab_project_variable.example: Creation complete after 0s [id=4:pat:*]
+
+Apply complete! Resources: 4 added, 0 changed, 0 destroyed.
