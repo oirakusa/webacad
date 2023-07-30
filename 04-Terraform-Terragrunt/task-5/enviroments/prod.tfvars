@@ -1,0 +1,1 @@
+gitlab_groups_name = ["01","02","07"]
