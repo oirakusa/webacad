@@ -1,0 +1,30 @@
+#-----------------------------kuard-deployment-------------------------#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kuard-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: 10.152.33.11
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - kuard
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: kuard
+          image: gcr.io/kuar-demo/kuard-amd64:blue
