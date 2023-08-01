@@ -1,0 +1,69 @@
+stages:
+  - "test"
+  - "build"
+
+linters:
+  stage: "test"
+  tags:
+    - "docker"
+  image: "mcr.microsoft.com/dotnet/sdk:6.0"
+  script: dotnet format ./dotnet/wa-app/
+  only:
+    - merge_request
+
+unit_tests:
+  stage: "test"
+  needs:
+    - linters
+  tags:
+    - "docker"
+  image: "mcr.microsoft.com/dotnet/sdk:6.0"
+  script: dotnet test ./dotnet/wa-app.Tests/ --logger:"junit;LogFilePath=../artifacts/{assembly}-test-result.xml;MethodFormat=Class;FailureBodyFormat=Verbose"
+  artifacts:
+    when: always
+    expire_in: "30 days"
+    paths:
+      - "./**/*test-result.xml"
+    reports:
+      junit:
+        - "./**/*test-result.xml"
+  only:
+    - merge_request
+
+sonar:
+  stage: "test"
+  needs:
+    - linters
+  tags:
+    - "docker"
+  image: "oirakusa/dotnet-sdk:0.1.0"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  script:
+    - dotnet sonarscanner begin /k:"core" /d:sonar.login="$SONAR_TOKEN" /d:"sonar.host.url=$SONAR_LOCAL_URL"
+    - dotnet build ./dotnet/wa-app/
+    - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+  only:
+    - merge_request
+
+build_solution:
+  stage: "build"
+  needs:
+    - unit_tests
+    - sonar
+    - linters
+  tags:
+    - "docker"
+  image: "mcr.microsoft.com/dotnet/sdk:6.0"
+  script: dotnet publish ./dotnet/wa-app/
+  variables:
+    DOTNET_BUILD_ARGS: "-c ${BUILD_TYPE}"
+  artifacts:
+    when: on_success
+    expire_in: "30 days"
+    paths:
+      - "./dotnet/wa-app/bin/Release/net6.0/publish/*"
+  only:
+    - merge_request
