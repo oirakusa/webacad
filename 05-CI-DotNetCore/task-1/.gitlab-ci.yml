@@ -1,0 +1,66 @@
+stages:
+  - "test"
+  - "build"
+
+tflint_test:
+  stage: "test"
+  tags:
+    - "docker"
+  image: "oirakusa/tflinters:0.1.1"
+  script: "tflint --minimum-failure-severity=error --recursive -f junit > tflint-result.xml"
+  artifacts:
+    paths:
+      - "tflint-result.xml"
+    reports:
+      junit:
+        - "tflint-result.xml"
+  only:
+    - merge_request
+
+tfsec_test:
+  stage: "test"
+  tags:
+    - "docker"
+  image: "oirakusa/tflinters:0.1.1"
+  script: "tfsec .  --out tfsec-result.xml"
+  artifacts:
+    paths:
+      - "tfsec-result.xml"
+    reports:
+      junit:
+        - "tfsec-result.xml"
+  only:
+    - merge_request
+
+checkov_test:
+  stage: "test"
+  tags:
+    - "docker"
+  image: "oirakusa/tflinters:0.1.1"
+  script: "checkov -d ./ -o junitxml > checkov_result.xml"
+  artifacts:
+    paths:
+      - "checkov_result.xml"
+    reports:
+      junit:
+        - "checkov_result.xml"
+  only:
+    - merge_request
+
+build_solution:
+  stage: "build"
+  needs:
+    - tflint_test
+    - tfsec_test
+    - checkov-tests
+  tags:
+    - "docker"
+  image: "oirakusa/tf-builder:0.1.0"
+  script: terraform init && terraform plan -out=webacad-modules-${CI_PIPELINE_ID}.tfplan
+  artifacts:
+    when: on_success
+    expire_in: "30 days"
+    paths:
+      - "./*.tfplan"
+  only:
+    - merge_request
