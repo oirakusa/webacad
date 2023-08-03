@@ -1,0 +1,119 @@
+---
+- hosts: front
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Installing nginx
+      ansible.builtin.yum:
+        name: nginx
+        state: present
+        update_cache: yes
+        allow_downgrade: yes
+    
+    - name: Delete /var/www/html
+      ansible.builtin.file:
+        path: "/var/www/html"
+        state: "absent"
+
+    - name: Installing php
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+        allow_downgrade: yes
+      with_items:
+        - "php"
+        - "php-mysqlnd"
+        - "php-fpm"
+        - "php-opcache"
+        - "php-gd"
+        - "php-xml"
+        - "php-mbstring"
+
+    - name: Make nginx owner of web directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        recurse: yes
+        owner: nginx
+        group: nginx
+
+    - name: Change php user to nginx
+      ansible.builtin.lineinfile:
+        path: /etc/php-fpm.d/www.conf
+        regexp: '^{{ item.apache }}'
+        line: '{{ item.nginx }}'
+      loop:
+      - user:
+        apache: "user ="
+        nginx: "user = nginx"
+      - group: 
+        apache: "group ="
+        nginx: "group = nginx"
+      notify: restart php
+
+    - name: Listen on unix socket not tcp/ip
+      ansible.builtin.lineinfile:
+        path: /etc/php-fpm.d/www.conf
+        regexp: "listen ="
+        line: "listen = /run/php-fpm/www.sock"
+        state: present
+      notify: restart php
+
+    - name: create php test page
+      ansible.builtin.copy:
+        dest: /usr/share/nginx/html/info.php
+        content: "<?php phpinfo(); ?>"
+        owner: nginx
+        group: nginx
+      notify:
+      - restart nginx
+      - restart php
+  
+  handlers:
+    - name: restart php
+      ansible.builtin.service:
+        name: php-fpm
+        state: restarted
+
+    - name: restart nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+
+- hosts: db
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Installing MySQL packages
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: latest
+        update_cache: yes
+        allow_downgrade: yes
+      with_items:
+        # - "python3-pymysql"
+        # - "python3-mysqldb"
+        - "mysql-common"
+        - "mysql-server"
+
+    - name: Start MySQL server
+      ansible.builtin.service:
+        name: "mysqld"
+        state: "started"
+        enabled: yes
+
+    - name: Set root user
+      community.mysql.mysql_user:
+        name: "root"
+        password: "password"
+        login_user: "root"
+        login_password: "password"
+        check_implicit_admin: yes
+        login_unix_socket: "/var/run/mysqld/mysqld.sock"
+
+    - name: Remove anonymous users
+      community.mysql.mysql_user:
+        name: ""
+        state: "absent"
+        login_user: "root"
+        login_password: "password"
