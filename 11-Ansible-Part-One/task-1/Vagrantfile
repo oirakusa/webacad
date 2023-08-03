@@ -1,0 +1,60 @@
+Vagrant.configure("2") do |config|
+  config.vm.define "mngm" do |mngm|
+    mngm.vm.box = "ubuntu/jammy64"
+    mngm.vm.network "private_network", ip: "192.168.33.10"
+      nic_type = "82546GC"
+    mngm.vm.hostname = "mngm"
+    mngm.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.cpus = 2
+      vb.name = "mngm-1" 
+      vb.memory = "2048"
+    end
+    mngm.vm.provision "ansible_local" do |ansible|
+      ansible.inventory_path = "./ansible/inventory.ini"
+      ansible.playbook = "./ansible/ssh-test.yml"
+      ansible.limit = 'all'
+    end
+    mngm.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+      service ssh restart
+    SHELL
+  end
+
+  config.vm.define "front" do |front|
+    front.vm.box = "bento/centos-stream-8"
+    front.vm.network "forwarded_port", guest: 80, host: 80
+    front.vm.network "private_network", ip: "192.168.33.11"
+      nic_type = "82546GC"
+    front.vm.hostname = "front"
+    front.vm.provider "virtualbox" do |vb|
+      vb.gui = false 
+      vb.cpus = 2
+      vb.name = "front-1" 
+      vb.memory = "2048"
+    front.vm.provision "shell", inline: <<-SHELL
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+    systemctl restart sshd 
+    SHELL
+    end
+  end
+
+  (1..3).each do |i|
+    config.vm.define "db#{i}" do |db|
+      db.vm.box = "bento/centos-stream-8"
+      db.vm.network "private_network", ip: "192.168.33.#{i+11}"
+        nic_type = "82546GC"
+      db.vm.hostname = "db-#{i}"
+      db.vm.provider "virtualbox" do |vb|
+        vb.gui = false
+        vb.cpus = 2
+        vb.name = "db-#{i}" 
+        vb.memory = "1024"
+      db.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+      systemctl restart sshd 
+      SHELL
+      end
+    end
+  end
+end
